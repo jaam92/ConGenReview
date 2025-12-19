@@ -7,6 +7,7 @@ library(tidyverse)
 library(scales)
 setwd("/scratch1/marjanak/wolf_msmc2/msmc2_chr1_rtest")
 
+
 # Analysis parameters
 gen <- 3  # Generation time in years
 mu <- 5e-9  # Mutation rate 1: 5 × 10^-9 per site per generation
@@ -155,10 +156,11 @@ msmc_mut_n <- bind_rows("n=4"= msmc_mut_n2, "n=12"= msmc_mut, .id="size") %>%
 # Create demographic history plot
 # Comparing effective population size over time across different parameters
 pm<-ggplot()+
-  geom_step(data=subset(msmc_mut_n,LeftYears>2000),aes(x=LeftYears, y=Ne,color=size),linewidth=0.7)+
-  scale_y_log10(labels=comma)+
-  scale_x_log10(labels=comma)+
-  facet_grid(rows=vars(r),cols=vars(mu))+
+  geom_step(data=subset(msmc_mut_n,LeftYears>2000),aes(x=LeftYears/1e3, y=Ne/1e3,color=size),linewidth=0.7)+
+  #scale_y_continuous(labels=comma)+
+  #scale_x_continuous(labels=comma)+
+  #facet_grid(rows=vars(r),cols=vars(mu),scales="free_y")+
+  facet_wrap(~r+mu, scales="free")+
   theme_bw()+
   theme(axis.text = element_text(color="black",size=10),
         axis.title=element_text(size=13),
@@ -169,7 +171,7 @@ pm<-ggplot()+
         legend.position="top")+  
   scale_color_manual(values=c("royalblue4","steelblue1"))+
   scale_alpha_manual(values=c(0.3,1,0.5))+
-  labs(x = "Log Years", y =  "Log Effective Population Size")+
+  labs(x = bquote('Years ('*10^3*')'), y =  bquote('Effective Population Size ('*10^3*')'))+
   guides(color=guide_legend(title="Haplotypes"))
 
 
@@ -204,9 +206,9 @@ gone_r_n <- bind_rows("n=12"=goner,"n=6"=goner3,.id="size")
 # Comparing effective population size over time across different parameters
 
 pg<-ggplot()+
-  geom_step(data=subset(gone_r_n,Years<100),aes(x=Years, y=Ne_diploids,color=size),linewidth=0.7)+
-  scale_y_log10(labels=comma)+
-  scale_x_log10(labels=comma)+
+  geom_step(data=subset(gone_r_n,Years<100),aes(x=Years, y=Ne_diploids/1e3,color=size),linewidth=0.7)+
+  #scale_y_continuous(labels = unit_format(unit = "K", scale = 1e-3))+
+  #scale_x_continuous(labels = unit_format(unit = "K", scale = 1e-3))+
   facet_grid(cols=vars(Recomb))+
   theme_bw()+
   theme(axis.text = element_text(color="black",size=10),
@@ -217,13 +219,11 @@ pg<-ggplot()+
         strip.text = element_text(size=13),
         legend.position="top")+  
   scale_color_manual(values=c("royalblue4","steelblue1"))+
-  labs(x = "Log Years", y =  "Log Effective Population Size")+
+  labs(x = "Years", y =  bquote('Effective Population Size ('*10^3*')'))+
   guides(color=guide_legend(title="Haplotypes"))
 
 
 # Plot Figure 1
 
 ggarrange(pm,pg,nrow=2,heights = c(1,0.5), labels=c("A) Historic Demography","B) Recent Demography"),label.x = -0.1)
-
-
 
