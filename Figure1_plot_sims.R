@@ -39,14 +39,17 @@ fst_label_levels <- function(fsts) paste0('F[ST] == "', sprintf("%.3f", fsts), '
 add_labels <- function(df) {
   df %>%
     mutate(
-      sample_size = factor(n_haplotypes_per_pop,
-                           levels = sort(unique(n_haplotypes_per_pop))),
+      # Simulation output is stored as haplotypes per population. Display the
+      # equivalent number of sampled diploid individuals in every plot.
+      n_diploid_per_pop = n_haplotypes_per_pop / 2,
+      sample_size = factor(n_diploid_per_pop,
+                           levels = sort(unique(n_diploid_per_pop))),
       fst_lab = factor(fst_label_levels(fst),
                        levels = fst_label_levels(sort(unique(fst))))
     )
 }
 
-haplotype_labeller <- function(x) paste(x, "haplotypes")
+individual_labeller <- function(x) paste(x, "diploid individuals")
 
 
 #----------------------------------------------------------
@@ -69,8 +72,8 @@ theme_fig <- theme_bw(base_size = 14) +
   )
 
 size_scales <- list(
-  scale_color_viridis_d(end = 0.85, name = "Haplotypes per population"),
-  scale_fill_viridis_d(end = 0.85, name = "Haplotypes per population")
+  scale_color_viridis_d(end = 0.85, name = "Diploid individuals per population"),
+  scale_fill_viridis_d(end = 0.85, name = "Diploid individuals per population")
 )
 
 y_cor_lab <- "|Correlation between PC1 and population|"
@@ -102,7 +105,7 @@ power_heatmap <- function(df, x_var, x_lab, outline_caption) {
     scale_color_manual(values = c(`TRUE` = "black", `FALSE` = "white"), guide = "none") +
     scale_fill_viridis_c(limits = c(0, 100), name = "Detection rate (%)") +
     scale_x_discrete(labels = function(x) scales::comma(as.numeric(x))) +
-    labs(x = x_lab, y = "Haplotypes per population", caption = outline_caption) +
+    labs(x = x_lab, y = "Diploid individuals per population", caption = outline_caption) +
     theme_fig +
     theme(panel.grid = element_blank(), legend.key.width = unit(1.5, "cm"))
 }
@@ -130,7 +133,7 @@ power_df <- rd(power_file) %>% add_labels()
 power_plot <- power_heatmap(
   power_df, L, "Number of independent SNPs",
   expression("Detection: |r| above the 95th percentile of the null. Outlined: " *
-               F[ST] %*% sqrt("individuals" %*% "SNPs") > 1)
+               F[ST] %*% sqrt("total diploid individuals" %*% "SNPs") > 1)
 ) +
   facet_wrap(~fst_lab, nrow = 1, labeller = label_parsed)
 
@@ -178,8 +181,8 @@ ld_comparison_df <- bind_rows(independent_comparison, linked_comparison) %>%
       )
     ),
     sample_size = factor(
-      n_haplotypes_per_pop,
-      levels = sort(unique(n_haplotypes_per_pop))
+      n_haplotypes_per_pop / 2,
+      levels = sort(unique(n_haplotypes_per_pop / 2))
     )
   )
 
@@ -231,11 +234,10 @@ ld_comparison_plot <- ggplot(
     expand = expansion(mult = c(0, 0.01))
   ) +
   labs(
-    x = "Haplotypes per population",
+    x = "Diploid individuals per population",
     y = "Detection rate (%)",
-    subtitle = expression(
-      paste(F[ST], " = 0.025; within-block ", r^2, " = 1")
-    )) +
+    subtitle = expression(paste(F[ST], " = 0.025; within-block ", r^2, " = 1"))
+  ) +
   theme_fig +
   theme(
     axis.text.x = element_text(angle = 0, hjust = 0.5),
@@ -243,11 +245,11 @@ ld_comparison_plot <- ggplot(
   )
 
 power_panel <- power_plot +
-  labs(title = "A. Detection power with independent markers") +
+  labs(title = "A. Independent markers") +
   theme(plot.title = element_text(face = "bold", size = 17))
 
 ld_panel <- ld_comparison_plot +
-  labs(title = "B. Linkage reduces the effective number of markers") +
+  labs(title = "B. Linkage between markers") +
   theme(plot.title = element_text(face = "bold", size = 17))
 
 figure1 <- power_panel / ld_panel +
@@ -305,11 +307,11 @@ collapse_plot <- ggplot(collapse_df, aes(bbp_scale, adjusted_correlation, color 
               se = FALSE, color = "black", linewidth = 0.7) +
   annotate("text", x = 1, y = 1.04, label = "predicted threshold",
            hjust = -0.05, size = annot_size, color = "grey30") +
-  scale_color_viridis_d(end = 0.85, name = "Haplotypes per population") +
+  scale_color_viridis_d(end = 0.85, name = "Diploid individuals per population") +
   scale_x_log10(labels = scales::label_number(drop0trailing = TRUE)) +
   coord_cartesian(ylim = c(-0.1, 1.08)) +
   labs(
-    x = expression(F[ST] %*% sqrt("number of individuals" %*% "number of SNPs")),
+    x = expression(F[ST] %*% sqrt("total diploid individuals" %*% "number of SNPs")),
     y = "PC1-population correlation\n(0 = chance, 1 = perfect)"
   ) +
   theme_fig +
@@ -384,7 +386,7 @@ ld_power_df <- rd("suppFig_LD_detection_power.csv") %>% add_labels() %>% ld_scen
 
 ld_power_plot <- power_heatmap(
   ld_power_df, L_total, "Total number of SNPs genotyped",
-  expression("Outlined: " * F[ST] %*% sqrt("individuals" %*% "linkage blocks") > 1 *
+  expression("Outlined: " * F[ST] %*% sqrt("total diploid individuals" %*% "linkage blocks") > 1 *
                "  (each block counted as one independent locus)")
 ) +
   facet_grid(scenario ~ fst_lab, labeller = label_parsed)
@@ -424,7 +426,7 @@ ld_plot <- ggplot(
   scale_x_log10(labels = scales::comma) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5)) +
   facet_grid(sample_size ~ fst_lab,
-             labeller = labeller(fst_lab = label_parsed, sample_size = haplotype_labeller)) +
+             labeller = labeller(fst_lab = label_parsed, sample_size = individual_labeller)) +
   labs(x = "Number of linkage blocks (total SNPs / block size)", y = y_cor_lab) +
   theme_fig +
   theme(legend.box = "vertical")
@@ -450,7 +452,7 @@ make_example_plot <- function(n_hap) {
                        name = NULL) +
     facet_grid(fst_lab ~ L_lab, scales = "free",
                labeller = labeller(fst_lab = label_parsed)) +
-    labs(title = paste(n_hap, "haplotypes per population")) +
+    labs(title = paste(n_hap / 2, "diploid individuals per population")) +
     theme_fig +
     theme(axis.text = element_blank(), axis.ticks = element_blank())
 }
