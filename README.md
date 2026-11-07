@@ -27,6 +27,7 @@ These simulations are intended to illustrate general analytical behavior under c
 | `Figures3And4_dfe.py` | Generates or processes the demographic and distribution-of-fitness-effects analyses used for Figures 3 and 4. |
 | `Figures3And4_run_dfe.sh` | Shell wrapper for running the Figures 3 and 4 analyses. |
 | `Figures3And4_plot_error.R` | Calculates, summarizes, and plots inference error for Figures 3 and 4. |
+| `Combine_Fig3and4.R` | Combines `fig3_error.pdf` and `fig4_diffs_barplot.pdf` into the final composite figure, `new_fig3_dfe_error.pdf`. |
 
 ## Software requirements
 
@@ -35,7 +36,10 @@ The repository contains R, Python, and shell scripts. The R plotting and simulat
 ```r
 install.packages(c(
   "tidyverse",
-  "scales"
+  "scales",
+  "magick",
+  "pdftools",
+  "patchwork"
 ))
 ```
 
@@ -80,7 +84,10 @@ Run the DFE workflow and then plot inference error:
 ```bash
 bash Figures3And4_run_dfe.sh
 Rscript Figures3And4_plot_error.R
+Rscript Combine_Fig3and4.R
 ```
+
+`Combine_Fig3and4.R` reads `fig3_error.pdf` and `fig4_diffs_barplot.pdf`, arranges them vertically, and saves the combined output as `new_fig3_dfe_error.pdf`. Before running the script, update or remove its `setwd()` statement so that it points to the local repository directory.
 
 The shell scripts may contain paths or computing-cluster settings that must be modified before use. The scripts set random-number seeds where appropriate to support reproducibility. Because some analyses include many simulation replicates, large numbers of markers, or computationally intensive demographic inference, run times and memory requirements will vary across computers.
 
@@ -100,7 +107,7 @@ The primary simulations assume independent markers. In empirical datasets, linka
 
 Figure 2 compares demographic histories inferred using GONE2 and MSMC2. The shell scripts run the respective programs, and `Figure2_plot_msmc2_gone2.r` processes their outputs for visualization.
 
-Figures 3 and 4 examine how sample size affects demographic and distribution-of-fitness-effects inference. `Figures3And4_dfe.py` and `Figures3And4_run_dfe.sh` implement the analysis workflow, while `Figures3And4_plot_error.R` summarizes deviations from the simulated values and generates the corresponding figures.
+Figures 3 and 4 examine how sample size affects demographic and distribution-of-fitness-effects inference. `Figures3And4_dfe.py` and `Figures3And4_run_dfe.sh` implement the analysis workflow, while `Figures3And4_plot_error.R` summarizes deviations from the simulated values and generates the corresponding component figures. `Combine_Fig3and4.R` then combines the two PDF components into the final composite figure.
 
 ## Reproducibility and interpretation
 
