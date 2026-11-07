@@ -57,13 +57,13 @@ The analyses for Figures 2–4 also require the external software and Python pac
 Run the simulations and then generate the plot:
 
 ```bash
-bash run_fig1_sims.sh
+sbatch run_fig1_sims.sh
 Rscript Figure1_plot_sims.R
 ```
 
 If `Figure1_detection_power.csv` has already been generated, only the plotting script is needed:
 
-```bash
+```sbatch
 Rscript Figure1_plot_sims.R
 ```
 
@@ -72,8 +72,8 @@ Rscript Figure1_plot_sims.R
 Run GONE2 and MSMC2, then process and plot their outputs:
 
 ```bash
-bash Figure2_run_gone2.sh
-bash Figure2_run_msmc2.sh
+sbatch Figure2_run_gone2.sh
+sbatch Figure2_run_msmc2.sh
 Rscript Figure2_plot_msmc2_gone2.r
 ```
 
@@ -82,7 +82,7 @@ Rscript Figure2_plot_msmc2_gone2.r
 Run the DFE workflow and then plot inference error:
 
 ```bash
-bash Figures3And4_run_dfe.sh
+sbatch Figures3And4_run_dfe.sh
 Rscript Figures3And4_plot_error.R
 Rscript Combine_Fig3and4.R
 ```
