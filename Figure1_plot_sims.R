@@ -1,7 +1,8 @@
 library(tidyverse)
+library(patchwork)
 
 #==========================================================
-# Fig. 1 plots from the summary CSVs written by fig1_simulate.R
+# Fig. 1 plots from the summary CSVs written by fig1_sims_final.R
 #
 # Runs in seconds; no simulation needed. Set csv_dir to the
 # folder with the CSVs (the SLURM wrapper sets FIG1_OUTDIR).
@@ -14,6 +15,18 @@ setwd(csv_dir)
 if (!interactive()) pdf(NULL)  # no stray Rplots.pdf in batch mode
 
 rd <- function(f) read_csv(f, show_col_types = FALSE)
+
+# Return the first available filename. This keeps the plotting script
+# compatible with both the repository filenames and older simulation output.
+first_existing <- function(...) {
+  candidates <- c(...)
+  found <- candidates[file.exists(candidates)]
+  if (length(found) == 0) {
+    stop("Could not find any of these input files: ",
+         paste(candidates, collapse = ", "))
+  }
+  found[[1]]
+}
 
 
 #----------------------------------------------------------
@@ -100,10 +113,19 @@ power_heatmap <- function(df, x_var, x_lab, outline_caption) {
 #==========================================================
 
 #----------------------------------------------------------
-# Detection-power heatmap (independent markers)
+# Detection-power heatmap (independent markers) and compact LD comparison
 #----------------------------------------------------------
 
-power_df <- rd("fig_detection_power.csv") %>% add_labels()
+power_file <- first_existing(
+  "Figure1_detection_power.csv",
+  "fig_detection_power.csv"
+)
+ld_power_file <- first_existing(
+  "suppFig_LD_detection_power.csv",
+  "Figure1_LD_detection_power.csv"
+)
+
+power_df <- rd(power_file) %>% add_labels()
 
 power_plot <- power_heatmap(
   power_df, L, "Number of independent SNPs",
@@ -112,8 +134,143 @@ power_plot <- power_heatmap(
 ) +
   facet_wrap(~fst_lab, nrow = 1, labeller = label_parsed)
 
-power_plot
-ggsave("Fig_detection_power.pdf", power_plot, width = 20, height = 7)
+# The main LD comparison is deliberately compact rather than repeating the
+# complete heatmap for every LD design. It compares datasets with roughly the
+# same number of independent units: 100 independent SNPs, 10,000 SNPs in 100
+# perfectly linked blocks, and 10,000 independent SNPs. The contrast is shown
+# at FST = 0.025, where marker dependence most strongly affects detection.
+ld_power_main <- rd(ld_power_file) %>% add_labels()
+
+independent_comparison <- power_df %>%
+  filter(near(fst, 0.025), L %in% c(100, 10000)) %>%
+  transmute(
+    n_haplotypes_per_pop,
+    sample_size,
+    power,
+    marker_design = case_when(
+      L == 100 ~ "100 independent SNPs",
+      L == 10000 ~ "10,000 independent SNPs"
+    )
+  )
+
+linked_comparison <- ld_power_main %>%
+  filter(
+    near(fst, 0.025),
+    L_total == 10000,
+    block_size == 100,
+    near(r2, 1)
+  ) %>%
+  transmute(
+    n_haplotypes_per_pop,
+    sample_size,
+    power,
+    marker_design = "10,000 SNPs in 100-SNP blocks"
+  )
+
+ld_comparison_df <- bind_rows(independent_comparison, linked_comparison) %>%
+  mutate(
+    marker_design = factor(
+      marker_design,
+      levels = c(
+        "100 independent SNPs",
+        "10,000 SNPs in 100-SNP blocks",
+        "10,000 independent SNPs"
+      )
+    ),
+    sample_size = factor(
+      n_haplotypes_per_pop,
+      levels = sort(unique(n_haplotypes_per_pop))
+    )
+  )
+
+expected_designs <- levels(ld_comparison_df$marker_design)
+observed_designs <- unique(as.character(na.omit(ld_comparison_df$marker_design)))
+missing_designs <- setdiff(expected_designs, observed_designs)
+
+if (length(missing_designs) > 0) {
+  stop(
+    "The main LD comparison could not be built. Missing: ",
+    paste(missing_designs, collapse = ", "), ".\n",
+    "Expected independent-marker rows at FST = 0.025 for L = 100 and ",
+    "L = 10,000, plus LD rows at FST = 0.025, L_total = 10,000, ",
+    "block_size = 100, and r2 = 1."
+  )
+}
+
+ld_comparison_plot <- ggplot(
+  ld_comparison_df,
+  aes(sample_size, power * 100, color = marker_design,
+      shape = marker_design, group = marker_design)
+) +
+  geom_hline(yintercept = 95, linetype = "dashed", color = "grey45") +
+  geom_line(linewidth = 1) +
+  geom_point(size = 3) +
+  annotate(
+    "text", x = Inf, y = 95, label = "95% detection",
+    hjust = 1.05, vjust = -0.4, size = annot_size, color = "grey35"
+  ) +
+  scale_color_manual(
+    values = c(
+      "100 independent SNPs" = "#4D4D4D",
+      "10,000 SNPs in 100-SNP blocks" = "#D55E00",
+      "10,000 independent SNPs" = "#0072B2"
+    ),
+    name = NULL
+  ) +
+  scale_shape_manual(
+    values = c(
+      "100 independent SNPs" = 16,
+      "10,000 SNPs in 100-SNP blocks" = 17,
+      "10,000 independent SNPs" = 15
+    ),
+    name = NULL
+  ) +
+  scale_y_continuous(
+    limits = c(0, 102),
+    breaks = seq(0, 100, 20),
+    expand = expansion(mult = c(0, 0.01))
+  ) +
+  labs(
+    x = "Haplotypes per population",
+    y = "Detection rate (%)",
+    subtitle = expression(
+      paste(F[ST], " = 0.025; within-block ", r^2, " = 1")
+    )) +
+  theme_fig +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    legend.position = "bottom"
+  )
+
+power_panel <- power_plot +
+  labs(title = "A. Detection power with independent markers") +
+  theme(plot.title = element_text(face = "bold", size = 17))
+
+ld_panel <- ld_comparison_plot +
+  labs(title = "B. Linkage reduces the effective number of markers") +
+  theme(plot.title = element_text(face = "bold", size = 17))
+
+figure1 <- power_panel / ld_panel +
+  plot_layout(heights = c(2.2, 1), guides = "collect") &
+  theme(legend.position = "bottom")
+
+print(figure1)
+ggsave(
+  filename = "Fig_detection_power.pdf",
+  plot = figure1,
+  width = 20,
+  height = 12
+)
+message("Saved combined Figure 1: ",
+        normalizePath("Fig_detection_power.pdf", mustWork = TRUE))
+
+# Retain the independent-marker panel as a separate diagnostic output.
+ggsave(
+  filename = "Fig_detection_power_independent_only.pdf",
+  plot = power_plot,
+  width = 20,
+  height = 7
+)
 
 
 #----------------------------------------------------------
