@@ -35,12 +35,12 @@ The repository contains R, Python, and shell scripts. The table lists current re
 
 | Software | Current release | Use | Download / installation |
 | --- | --- | --- | --- |
-| R | 4.6.2 | Simulations, summaries, and plotting | [CRAN](https://cran.r-project.org/) |
-| Python | 3.15.2 | Figure 3 simulations and inference | [Python downloads](https://www.python.org/downloads/) |
+| R | 4.5.2 | Simulations, summaries, and plotting | [CRAN](https://cran.r-project.org/) |
+| Python | 3.11 | Figure 3 simulations and inference | [Python downloads](https://www.python.org/downloads/) |
 | tidyverse | 2.0.0 | R data processing and plotting | [CRAN](https://cran.r-project.org/package=tidyverse) |
 | scales | 1.4.0 | Plot scales and labels | [CRAN](https://cran.r-project.org/package=scales) |
 | patchwork | 1.3.2 | Figure-panel assembly | [CRAN](https://cran.r-project.org/package=patchwork) |
-| dadi | 2.4.4 | Demographic and DFE simulation and inference | [PyPI](https://pypi.org/project/dadi/) · [Installation guide](https://dadi.readthedocs.io/en/latest/user-guide/installation/) |
+| dadi | 2.4.5 | Demographic and DFE simulation and inference | [PyPI](https://pypi.org/project/dadi/) · [Installation guide](https://dadi.readthedocs.io/en/latest/user-guide/installation/) |
 | NumPy | 2.5.5 | Numerical calculations in Python | [Downloads](https://numpy.org/install/) · [Release notes](https://numpy.org/news/) |
 | nlopt (Python package) | 2.11.0 | Numerical optimization | [PyPI](https://pypi.org/project/nlopt/) |
 | GONE2 | 2.0.2 | Figure 2 demographic inference | [Releases](https://github.com/esrud/GONE2/releases) |
