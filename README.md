@@ -59,7 +59,7 @@ install.packages(c(
 Install the Figure 3 Python packages in an isolated environment, following dadi's installation guide:
 
 ```bash
-python -m pip install dadi nlopt numpy
+conda create -n dadi -c conda-forge python=3.11 dadi nlopt
 ```
 
 This command installs available compatible releases; it does not guarantee that every package will match the table on every platform or Python version. In particular, check dadi and NLopt support before selecting a newly released Python version. Figure 2 additionally requires GONE2 and MSMC2. The `sbatch` wrappers require a SLURM-managed cluster; their scheduler and Conda settings are environment-specific. Paths to external executables, scripts, results directories, and input files may need to be adjusted for the user's computing environment.
