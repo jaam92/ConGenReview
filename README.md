@@ -99,7 +99,7 @@ The plotting script writes:
 
 The repository also includes `dfe_all_replicates.csv`, which consolidates the 200 replicate-level results into a single file for inspection and downstream analysis.
 
-The shell scripts may contain paths or computing-cluster settings that must be modified before use. The scripts set random-number seeds where appropriate to support reproducibility. Because some analyses include many simulation replicates, large numbers of markers, or computationally intensive demographic inference, run times and memory requirements will vary across computers.
+The shell scripts may contain paths or computing-cluster settings that must be modified before use. The scripts set random-number seeds where appropriate to support reproducibility. Because some analyses include many simulation replicates, large numbers of markers, or computationally intensive demographic inference, run times and memory requirements will vary across computers. We use dadi version 2.4.5.
 
 ## Population-structure simulations
 
