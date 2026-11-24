@@ -31,7 +31,22 @@ These simulations are intended to illustrate general analytical behavior under c
 
 ## Software requirements
 
-The repository contains R, Python, and shell scripts. The R plotting and simulation code uses packages including:
+The repository contains R, Python, and shell scripts. The table lists current releases checked on **24 November 2026**, with official download or installation links. These are release-reference versions, not an independently verified record of the environment used to generate the archived results. Use mutually compatible package versions and retain the installed-version records described below.
+
+| Software | Current release | Use | Download / installation |
+| --- | --- | --- | --- |
+| R | 4.6.2 | Simulations, summaries, and plotting | [CRAN](https://cran.r-project.org/) |
+| Python | 3.15.2 | Figure 3 simulations and inference | [Python downloads](https://www.python.org/downloads/) |
+| tidyverse | 2.0.0 | R data processing and plotting | [CRAN](https://cran.r-project.org/package=tidyverse) |
+| scales | 1.4.0 | Plot scales and labels | [CRAN](https://cran.r-project.org/package=scales) |
+| patchwork | 1.3.2 | Figure-panel assembly | [CRAN](https://cran.r-project.org/package=patchwork) |
+| dadi | 2.4.4 | Demographic and DFE simulation and inference | [PyPI](https://pypi.org/project/dadi/) · [Installation guide](https://dadi.readthedocs.io/en/latest/user-guide/installation/) |
+| NumPy | 2.5.5 | Numerical calculations in Python | [Downloads](https://numpy.org/install/) · [Release notes](https://numpy.org/news/) |
+| nlopt (Python package) | 2.11.0 | Numerical optimization | [PyPI](https://pypi.org/project/nlopt/) |
+| GONE2 | 2.0.2 | Figure 2 demographic inference | [Releases](https://github.com/esrud/GONE2/releases) |
+| MSMC2 | 2.1.4 | Figure 2 demographic inference | [Source and installation](https://github.com/stschiff/msmc2) · [Releases](https://github.com/stschiff/msmc2/releases) |
+
+Install the R packages with:
 
 ```r
 install.packages(c(
@@ -41,7 +56,25 @@ install.packages(c(
 ))
 ```
 
-The Figure 3 workflow requires Python 3 with `dadi`, `nlopt`, and `numpy`. Figure 2 additionally requires GONE2 and MSMC2. Paths to external executables, scripts, results directories, and input files may need to be adjusted for the user's computing environment.
+Install the Figure 3 Python packages in an isolated environment, following dadi's installation guide:
+
+```bash
+python -m pip install dadi nlopt numpy
+```
+
+This command installs available compatible releases; it does not guarantee that every package will match the table on every platform or Python version. In particular, check dadi and NLopt support before selecting a newly released Python version. Figure 2 additionally requires GONE2 and MSMC2. The `sbatch` wrappers require a SLURM-managed cluster; their scheduler and Conda settings are environment-specific. Paths to external executables, scripts, results directories, and input files may need to be adjusted for the user's computing environment.
+
+### Recording the analysis environment
+
+For exact reproducibility, retain the installed versions rather than relying on the changing designation “latest.” Run these commands in the environments actually used for analysis:
+
+```bash
+Rscript -e 'sessionInfo()' > R_sessionInfo.txt
+python --version > python_version.txt
+python -m pip freeze > python_requirements.txt
+```
+
+For source installations of GONE2 and MSMC2, also record the release tag and Git commit (`git rev-parse HEAD` from each software repository). A current release is not necessarily the release used for an earlier simulation run.
 
 ## Running the analyses
 
@@ -99,7 +132,7 @@ The plotting script writes:
 
 The repository also includes `dfe_all_replicates.csv`, which consolidates the 200 replicate-level results into a single file for inspection and downstream analysis.
 
-The shell scripts may contain paths or computing-cluster settings that must be modified before use. The scripts set random-number seeds where appropriate to support reproducibility. Because some analyses include many simulation replicates, large numbers of markers, or computationally intensive demographic inference, run times and memory requirements will vary across computers. We use dadi version 2.4.5.
+The shell scripts may contain paths or computing-cluster settings that must be modified before use. The scripts set random-number seeds where appropriate to support reproducibility. Because some analyses include many simulation replicates, large numbers of markers, or computationally intensive demographic inference, run times and memory requirements will vary across computers.
 
 ## Population-structure simulations
 
