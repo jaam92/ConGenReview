@@ -276,6 +276,13 @@ class_df <- ok %>%
 
 true_class <- class_props(alpha_true, beta_true) %>% mutate(label = "True DFE")
 
+# Numbers for the text: true vs inferred share of mutations in each class
+class_df %>%
+  left_join(select(true_class, class, true = prop), by = "class") %>%
+  mutate(class = str_replace_all(class, "\n", " ")) %>%
+  select(sample_size = size_short, class, true, median, lower, upper) %>%
+  write_csv(file.path(out_dir, "fig3_class_proportions.csv"))
+
 panel_c <- ggplot() +
   geom_col(data = true_class, aes(class, prop, fill = label),
            color = "black", width = 0.75) +
